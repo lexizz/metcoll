@@ -23,13 +23,15 @@ const (
 type listUrls []string
 
 type exporter struct {
-	httpClient *http.Client
-	metrics    metrics.Metrics
+	httpClient  *http.Client
+	metrics     metrics.Metrics
+	metricsData metrics.MetricsType
 }
 
 func main() {
 	exp := exporter{
 		httpClient: &http.Client{},
+		metrics:    metrics.Metrics{},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,7 +60,7 @@ func main() {
 	for {
 		select {
 		case <-tickerGetMetrics.C:
-			exp.metrics = metrics.CollectData()
+			exp.metricsData = exp.metrics.CollectData()
 			fmt.Println("Get metrics...")
 		case <-tickerSendData.C:
 			exp.sendDataToServer()
@@ -107,7 +109,7 @@ func (exporter *exporter) sendRequest(url string) {
 func (exporter *exporter) getListUrls() listUrls {
 	urls := make(listUrls, 0, 50)
 
-	for metricName, metricValue := range exporter.metrics {
+	for metricName, metricValue := range exporter.metricsData {
 		metricType, err := helper.GetType(metricValue)
 
 		if err != nil {

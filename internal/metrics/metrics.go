@@ -10,16 +10,53 @@ type (
 	Counter int64
 )
 
-type Metrics map[string]interface{}
+type Metrics struct {
+}
+
+type MetricsType map[string]interface{}
 
 var callCounter Counter = 0
 
-func CollectData() Metrics {
+func (Metrics *Metrics) GetListAvailable() MetricsType {
+	return MetricsType{
+		"Alloc":         nil,
+		"BuckHashSys":   nil,
+		"Frees":         nil,
+		"GCCPUFraction": nil,
+		"GCSys":         nil,
+		"HeapAlloc":     nil,
+		"HeapIdle":      nil,
+		"HeapInuse":     nil,
+		"HeapObjects":   nil,
+		"HeapReleased":  nil,
+		"HeapSys":       nil,
+		"LastGC":        nil,
+		"Lookups":       nil,
+		"MCacheInuse":   nil,
+		"MCacheSys":     nil,
+		"MSpanInuse":    nil,
+		"MSpanSys":      nil,
+		"Mallocs":       nil,
+		"NextGC":        nil,
+		"NumForcedGC":   nil,
+		"NumGC":         nil,
+		"OtherSys":      nil,
+		"PauseTotalNs":  nil,
+		"StackInuse":    nil,
+		"StackSys":      nil,
+		"Sys":           nil,
+		"TotalAlloc":    nil,
+		"PollCount":     nil,
+		"RandomValue":   nil,
+	}
+}
+
+func (Metrics *Metrics) CollectData() MetricsType {
 	var memoryStat runtime.MemStats
 
 	runtime.ReadMemStats(&memoryStat)
 
-	return Metrics{
+	return MetricsType{
 		"Alloc":         Gauge(memoryStat.Alloc),
 		"BuckHashSys":   Gauge(memoryStat.BuckHashSys),
 		"Frees":         Gauge(memoryStat.Frees),
