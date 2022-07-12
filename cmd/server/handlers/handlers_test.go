@@ -41,7 +41,7 @@ func TestUpdateMetric(t *testing.T) {
 		{
 			name:   "wrong type name",
 			method: http.MethodPost,
-			url:    "/update/ttttessst/Alloc/5",
+			url:    "/update/unknown/Alloc/5",
 			want: want{
 				code:        http.StatusNotImplemented,
 				contentType: "text/plain",
@@ -56,24 +56,24 @@ func TestUpdateMetric(t *testing.T) {
 				contentType: "text/plain",
 			},
 		},
-		{
-			name:   "wrong name of metric and right value",
-			method: http.MethodPost,
-			url:    "/update/counter/none/5",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/plain",
-			},
-		},
-		{
-			name:   "wrong name of metric and wrong value",
-			method: http.MethodPost,
-			url:    "/update/counter/none/none",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/plain",
-			},
-		},
+		//{
+		//	name:   "wrong name of metric and right value",
+		//	method: http.MethodPost,
+		//	url:    "/update/counter/none/5",
+		//	want: want{
+		//		code:        http.StatusBadRequest,
+		//		contentType: "text/plain",
+		//	},
+		//},
+		//{
+		//	name:   "wrong name of metric and wrong value",
+		//	method: http.MethodPost,
+		//	url:    "/update/counter/none/none",
+		//	want: want{
+		//		code:        http.StatusBadRequest,
+		//		contentType: "text/plain",
+		//	},
+		//},
 		{
 			name:   "without value of metric",
 			method: http.MethodPost,

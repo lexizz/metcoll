@@ -13,7 +13,6 @@ import (
 )
 
 func UpdateMetric() http.HandlerFunc {
-	metricsData := metrics.Metrics{}
 	metricRepository := metricMemoryRepository.New()
 
 	return func(response http.ResponseWriter, request *http.Request) {
@@ -46,18 +45,6 @@ func UpdateMetric() http.HandlerFunc {
 		log.Println("---metricFromRequestName:", metricFromRequestName)
 		log.Println("---metricFromRequestType:", metricFromRequestType)
 		log.Println("---metricFromRequestValue:", metricFromRequestValue)
-
-		metricListAvailableMethods := metricsData.GetListAvailable()
-
-		_, ok := metricListAvailableMethods[metricFromRequestName]
-
-		if !ok {
-			writeError := "Not found metric"
-			http.Error(response, writeError, http.StatusBadRequest)
-			log.Println(writeError)
-
-			return
-		}
 
 		reg, err := regexp.Compile(`^[0-9\.]+$`)
 
