@@ -52,7 +52,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update/counter/Alloc/sdf",
 			want: want{
-				code:        http.StatusNotFound,
+				code:        http.StatusBadRequest,
 				contentType: "text/plain",
 			},
 		},

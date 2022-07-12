@@ -50,7 +50,7 @@ func UpdateMetric() http.HandlerFunc {
 
 		if !reg.MatchString(metricFromRequestValue) || err != nil {
 			writeError := "Value of metric not correct"
-			http.Error(response, writeError, http.StatusNotFound)
+			http.Error(response, writeError, http.StatusBadRequest)
 			log.Println(writeError)
 
 			return
