@@ -43,7 +43,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update/ttttessst/Alloc/5",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotImplemented,
 				contentType: "text/plain",
 			},
 		},
@@ -52,7 +52,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update/counter/Alloc/sdf",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotFound,
 				contentType: "text/plain",
 			},
 		},
@@ -61,7 +61,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update/counter/Alloc/",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotFound,
 				contentType: "text/plain",
 			},
 		},
@@ -70,7 +70,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update/counter/",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotFound,
 				contentType: "text/plain",
 			},
 		},
@@ -79,7 +79,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/update",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotFound,
 				contentType: "text/plain",
 			},
 		},
@@ -88,7 +88,7 @@ func TestUpdateMetric(t *testing.T) {
 			method: http.MethodPost,
 			url:    "/",
 			want: want{
-				code:        http.StatusBadRequest,
+				code:        http.StatusNotFound,
 				contentType: "text/plain",
 			},
 		},

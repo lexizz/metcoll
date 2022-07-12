@@ -33,7 +33,7 @@ func UpdateMetric() http.HandlerFunc {
 
 		if len(urlData) < 4 {
 			writeError := "Params not found"
-			http.Error(response, writeError, http.StatusBadRequest)
+			http.Error(response, writeError, http.StatusNotFound)
 			log.Println(writeError)
 
 			return
@@ -50,7 +50,7 @@ func UpdateMetric() http.HandlerFunc {
 
 		if !reg.MatchString(metricFromRequestValue) || err != nil {
 			writeError := "Value of metric not correct"
-			http.Error(response, writeError, http.StatusBadRequest)
+			http.Error(response, writeError, http.StatusNotFound)
 			log.Println(writeError)
 
 			return
@@ -70,7 +70,7 @@ func UpdateMetric() http.HandlerFunc {
 			}
 		} else {
 			writeError := "Type not found"
-			http.Error(response, writeError, http.StatusBadRequest)
+			http.Error(response, writeError, http.StatusNotImplemented)
 			log.Println(writeError)
 
 			return
