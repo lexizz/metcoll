@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lexizz/metcoll/cmd/server/handlers"
 	"log"
 	"net/http"
 )
@@ -10,37 +11,29 @@ const (
 	PORT string = "8080"
 )
 
+type server struct {
+	httpServer *http.Server
+}
+
+func New() *server {
+	return &server{
+		httpServer: &http.Server{
+			Addr:    HOST + ":" + PORT,
+			Handler: getRoutes(),
+		},
+	}
+}
+
 func getRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.NotFoundHandler())
-	mux.HandleFunc("/update/", POSTHandler)
+	mux.HandleFunc("/update/", handlers.UpdateMetric())
 
 	return mux
 }
 
 func main() {
-	server := &http.Server{
-		Addr:    HOST + ":" + PORT,
-		Handler: getRoutes(),
-	}
+	serv := New()
 
-	log.Fatal(server.ListenAndServe())
-}
-
-func POSTHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.Method, r.Host, r.URL.Path, r.URL.RawQuery)
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
-	w.Header().Set("content-type", "text/plain")
-
-	w.WriteHeader(http.StatusOK)
-
-	_, writeError := w.Write([]byte("Ok"))
-	if writeError != nil {
-		log.Fatal(writeError)
-	}
+	log.Fatal(serv.httpServer.ListenAndServe())
 }
