@@ -13,9 +13,11 @@ import (
 var exp exporter
 
 func init() {
+	met := metrics.Metrics{}
 	exp = exporter{
-		httpClient: &http.Client{},
-		metrics:    metrics.CollectData(),
+		httpClient:  &http.Client{},
+		metrics:     met,
+		metricsData: met.CollectData(),
 	}
 }
 
@@ -86,7 +88,7 @@ func TestSendRequest(t *testing.T) {
 }
 
 func TestGetListUrls(t *testing.T) {
-	countMetrics := len(exp.metrics)
+	countMetrics := len(exp.metricsData)
 	countUrls := len(exp.getListUrls())
 
 	assert.Equal(t, countMetrics, countUrls)
