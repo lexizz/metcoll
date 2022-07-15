@@ -46,7 +46,7 @@ func TestUpdateMetric(t *testing.T) {
 			},
 		},
 		{
-			name:   "positive test #3 wrong name of metric and right value",
+			name:   "positive test #3 - wrong name of metric and right value",
 			method: http.MethodPost,
 			url:    "/update/counter/none/5",
 			want: want{
