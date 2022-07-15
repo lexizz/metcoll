@@ -80,8 +80,6 @@ func ShowValueMetric(metricRepository metricrepository.Interface) http.HandlerFu
 }
 
 func UpdateMetric(metricRepository metricrepository.Interface) http.HandlerFunc {
-	metricsData := metrics.Metrics{}
-
 	return func(write http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
 			http.Error(write, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
@@ -112,17 +110,6 @@ func UpdateMetric(metricRepository metricrepository.Interface) http.HandlerFunc 
 		log.Println("---metricFromRequestName:", metricFromRequestName)
 		log.Println("---metricFromRequestType:", metricFromRequestType)
 		log.Println("---metricFromRequestValue:", metricFromRequestValue)
-
-		metricListAvailableMethods := metricsData.GetListAvailable()
-		_, ok := metricListAvailableMethods[metricFromRequestName]
-
-		if !ok {
-			writeError := "Not found metric"
-			http.Error(write, writeError, http.StatusBadRequest)
-			log.Println(writeError)
-
-			return
-		}
 
 		regex := regexp.MustCompile(patternConst)
 

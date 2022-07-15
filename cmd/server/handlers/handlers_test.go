@@ -46,6 +46,15 @@ func TestUpdateMetric(t *testing.T) {
 			},
 		},
 		{
+			name:   "positive test #3 wrong name of metric and right value",
+			method: http.MethodPost,
+			url:    "/update/counter/none/5",
+			want: want{
+				code:        http.StatusOK,
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+		{
 			name:   "wrong type name",
 			method: http.MethodPost,
 			url:    "/update/unknown/Alloc/5",
@@ -58,15 +67,6 @@ func TestUpdateMetric(t *testing.T) {
 			name:   "wrong value of metric",
 			method: http.MethodPost,
 			url:    "/update/counter/Alloc/sdf",
-			want: want{
-				code:        http.StatusBadRequest,
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name:   "wrong name of metric and right value",
-			method: http.MethodPost,
-			url:    "/update/counter/none/5",
 			want: want{
 				code:        http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
