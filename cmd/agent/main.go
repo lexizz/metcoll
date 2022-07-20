@@ -113,7 +113,7 @@ func (exporter *exporter) getListUrls() listUrls {
 	for metricName, metricValue := range exporter.metricsData {
 		metricType, err := helper.GetType(metricValue)
 		if err != nil {
-			log.Printf("--- metricType: %v, metricType; ERR: %v", metricType, err)
+			log.Printf("--- metricType: %v, metricType; ERR get type: %v", metricType, err)
 		}
 
 		log.Printf("--- metricName: %v | metricType: %v | metricValue: %v\n", metricName, metricType, metricValue)
