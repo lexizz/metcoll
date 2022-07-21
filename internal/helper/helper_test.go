@@ -3,8 +3,10 @@ package helper
 import (
 	"testing"
 
-	"github.com/lexizz/metcoll/internal/metrics"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/lexizz/metcoll/internal/metrics"
+
 	"github.com/stretchr/testify/require"
 )
 
