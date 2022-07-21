@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/lexizz/metcoll/internal/helper"
 	"github.com/lexizz/metcoll/internal/metrics"
 	"github.com/lexizz/metcoll/internal/repository/interfaces/metricrepository"

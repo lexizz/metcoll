@@ -3,6 +3,7 @@ package metrics
 import (
 	"math/rand"
 	"runtime"
+	"sync"
 )
 
 type (
@@ -10,11 +11,21 @@ type (
 	Counter int64
 )
 
-type Metrics struct{}
+type Metrics struct {
+	counter Counter
+	mutex   *sync.RWMutex
+}
 
 type Type map[string]interface{}
 
-var callCounter Counter
+func New() *Metrics {
+	var m sync.RWMutex
+
+	met := Metrics{}
+	met.mutex = &m
+
+	return &met
+}
 
 func (met *Metrics) GetListAvailable() Type {
 	return Type{
@@ -52,10 +63,12 @@ func (met *Metrics) GetListAvailable() Type {
 
 func (met *Metrics) CollectData() Type {
 	var memoryStat runtime.MemStats
+	met.setCounter()
 
 	runtime.ReadMemStats(&memoryStat)
 
-	return Type{
+	met.mutex.Lock()
+	data := Type{
 		"Alloc":         Gauge(memoryStat.Alloc),
 		"BuckHashSys":   Gauge(memoryStat.BuckHashSys),
 		"Frees":         Gauge(memoryStat.Frees),
@@ -83,14 +96,20 @@ func (met *Metrics) CollectData() Type {
 		"StackSys":      Gauge(memoryStat.StackSys),
 		"Sys":           Gauge(memoryStat.Sys),
 		"TotalAlloc":    Gauge(memoryStat.TotalAlloc),
-		"PollCount":     getCallCounter(),
+		"PollCount":     met.getCallCounter(),
 		"RandomValue":   Gauge(rand.Float64()), //nolint:gosec
 	}
+	met.mutex.Unlock()
+
+	return data
 }
 
-func getCallCounter() Counter {
-	return func() Counter {
-		callCounter++
-		return callCounter
-	}()
+func (met *Metrics) getCallCounter() Counter {
+	return met.counter
+}
+
+func (met *Metrics) setCounter() {
+	met.mutex.Lock()
+	met.counter++
+	met.mutex.Unlock()
 }

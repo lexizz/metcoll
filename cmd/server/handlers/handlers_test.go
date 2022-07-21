@@ -6,11 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/lexizz/metcoll/internal/metrics"
 	"github.com/lexizz/metcoll/internal/repository/metricmemoryrepository"
 	"github.com/lexizz/metcoll/internal/server"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUpdateMetric(t *testing.T) {
@@ -276,7 +277,7 @@ func TestShowValueMetric(t *testing.T) {
 func TestShowPossibleValue(t *testing.T) {
 	metricRepository := metricmemoryrepository.New()
 
-	metricsObject := metrics.Metrics{}
+	metricsObject := metrics.New()
 
 	for metricName, metricValue := range metricsObject.CollectData() {
 		metricRepository.InsertValue(metricName, metricValue)

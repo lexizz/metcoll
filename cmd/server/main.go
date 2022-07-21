@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	serv := server.New()
+	httpServer := server.New()
 
-	log.Fatal(serv.Init.ListenAndServe())
+	log.Fatal(httpServer.Listen())
 }

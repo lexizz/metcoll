@@ -3,9 +3,11 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/lexizz/metcoll/cmd/server/handlers"
 	"github.com/lexizz/metcoll/internal/repository/interfaces/metricrepository"
 	"github.com/lexizz/metcoll/internal/repository/metricmemoryrepository"
@@ -17,18 +19,23 @@ const (
 )
 
 type server struct {
-	Init *http.Server
+	init *http.Server
 }
 
 func New() *server {
 	metricRepository := metricmemoryrepository.New()
 
 	return &server{
-		Init: &http.Server{
-			Addr:    HOST + ":" + PORT,
-			Handler: GetRoutes(metricRepository),
+		init: &http.Server{
+			Addr:              HOST + ":" + PORT,
+			Handler:           GetRoutes(metricRepository),
+			ReadHeaderTimeout: 5 * time.Second,
 		},
 	}
+}
+
+func (httpServer *server) Listen() error {
+	return httpServer.init.ListenAndServe()
 }
 
 func GetRoutes(metricRepository metricrepository.Interface) http.Handler {

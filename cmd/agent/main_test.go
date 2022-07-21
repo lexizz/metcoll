@@ -7,22 +7,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lexizz/metcoll/internal/metrics"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/lexizz/metcoll/internal/metrics"
 )
 
-var exp exporter
-
-func init() {
-	met := metrics.Metrics{}
-	exp = exporter{
+func TestConvertToString(t *testing.T) {
+	met := metrics.New()
+	exp := exporter{
 		httpClient:  &http.Client{},
 		metrics:     met,
 		metricsData: met.CollectData(),
 	}
-}
 
-func TestConvertToString(t *testing.T) {
 	tests := []struct {
 		name  string
 		value interface{}
@@ -75,6 +72,13 @@ func TestConvertToString(t *testing.T) {
 }
 
 func TestSendRequest(t *testing.T) {
+	met := metrics.New()
+	exp := exporter{
+		httpClient:  &http.Client{},
+		metrics:     met,
+		metricsData: met.CollectData(),
+	}
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/", r.URL.Path)
 		assert.Equal(t, "POST", r.Method)
@@ -89,6 +93,13 @@ func TestSendRequest(t *testing.T) {
 }
 
 func TestGetListUrls(t *testing.T) {
+	met := metrics.New()
+	exp := exporter{
+		httpClient:  &http.Client{},
+		metrics:     met,
+		metricsData: met.CollectData(),
+	}
+
 	countMetrics := len(exp.metricsData)
 	countUrls := len(exp.getListUrls())
 

@@ -25,14 +25,14 @@ type listUrls []string
 
 type exporter struct {
 	httpClient  *http.Client
-	metrics     metrics.Metrics
+	metrics     *metrics.Metrics
 	metricsData metrics.Type
 }
 
 func main() {
 	exp := exporter{
 		httpClient: &http.Client{},
-		metrics:    metrics.Metrics{},
+		metrics:    metrics.New(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
