@@ -8,7 +8,7 @@ import (
 	"github.com/lexizz/metcoll/internal/repository/interfaces/metricrepository"
 )
 
-type storage metrics.Type
+type storage metrics.Collection
 
 type metricMemory struct {
 	data storage
@@ -16,12 +16,12 @@ type metricMemory struct {
 
 var _ metricrepository.Interface = &metricMemory{}
 
-func (m *metricMemory) GetAll() (metrics.Type, error) {
+func (m *metricMemory) GetAll() (metrics.Collection, error) {
 	if len(m.data) < 1 {
 		return nil, errors.New("data not found")
 	}
 
-	return metrics.Type(m.data), nil
+	return metrics.Collection(m.data), nil
 }
 
 func New() *metricMemory {

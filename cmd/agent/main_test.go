@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -71,7 +72,7 @@ func TestConvertToString(t *testing.T) {
 	}
 }
 
-func TestSendRequest(t *testing.T) {
+func TestSendRequestGET(t *testing.T) {
 	met := metrics.New()
 	exp := exporter{
 		httpClient:  &http.Client{},
@@ -81,7 +82,7 @@ func TestSendRequest(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/", r.URL.Path)
-		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "text/plain; charset=UTF-8", r.Header.Get("Content-Type"))
 
 		w.Header().Set("content-type", "text/plain")
@@ -89,7 +90,36 @@ func TestSendRequest(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	exp.sendRequest(ts.URL)
+	exp.sendRequest(ts.URL, http.MethodGet, nil)
+}
+
+func TestSendRequestPOST(t *testing.T) {
+	met := metrics.New()
+	exp := exporter{
+		httpClient:  &http.Client{},
+		metrics:     met,
+		metricsData: met.CollectData(),
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/", r.URL.Path)
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "application/json; charset=UTF-8", r.Header.Get("Content-Type"))
+
+		body, err := io.ReadAll(r.Body)
+		assert.NoError(t, err)
+
+		bodyPrepared := string(body)
+
+		assert.Equal(t, "{\"message\":\"test\"}", bodyPrepared)
+
+		w.Header().Set("content-type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	body := []byte(`{"message":"test"}`)
+	exp.sendRequest(ts.URL, http.MethodPost, body)
 }
 
 func TestGetListUrls(t *testing.T) {

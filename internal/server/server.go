@@ -52,10 +52,8 @@ func GetRoutes(metricRepository metricrepository.Interface) http.Handler {
 	})
 
 	router.Route("/update", func(routerUrlUpdate chi.Router) {
-		routerUrlUpdate.Post("/", func(writer http.ResponseWriter, request *http.Request) {
-			log.Println("=== Part url was detected `/update` === ")
-
-			http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		routerUrlUpdate.Route("/", func(generalRouterUrlUpdate chi.Router) {
+			generalRouterUrlUpdate.Post("/", handlers.UpdateMetricJSON(metricRepository))
 		})
 
 		routerUrlUpdate.Route("/{metricType:[a-zA-Z]+}", func(routerUrlUpdateType chi.Router) {
@@ -89,6 +87,8 @@ func GetRoutes(metricRepository metricrepository.Interface) http.Handler {
 
 			http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		})
+
+		routerUrlValue.Post("/", handlers.ShowValueMetricJSON(metricRepository))
 
 		routerUrlValue.Route("/{metricType:[a-zA-Z]+}", func(routerUrlValueType chi.Router) {
 			routerUrlValueType.Get("/", func(writer http.ResponseWriter, request *http.Request) {
