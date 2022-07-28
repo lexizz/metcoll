@@ -1,6 +1,9 @@
 package handlers_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -101,16 +104,7 @@ func TestUpdateMetric(t *testing.T) {
 			},
 		},
 		{
-			name:   "negative test #6 - without value of metric and name and type",
-			method: http.MethodPost,
-			url:    "/update",
-			want: want{
-				code:        http.StatusNotFound,
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name:   "negative test #7 - wrong url like general page",
+			name:   "negative test #6 - wrong url like general page",
 			method: http.MethodPost,
 			url:    "/",
 			want: want{
@@ -119,7 +113,7 @@ func TestUpdateMetric(t *testing.T) {
 			},
 		},
 		{
-			name:   "negative test #8 - wrong http method with right url",
+			name:   "negative test #7 - wrong http method with right url",
 			method: http.MethodGet,
 			url:    "/update/gauge/Alloc/5",
 			want: want{
@@ -346,6 +340,152 @@ func TestShowPossibleValue(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("content-type"))
 
 			assert.NotEmpty(t, resultBody)
+		})
+	}
+}
+
+func TestUpdateMetricJSON(t *testing.T) {
+	metricRepository := metricmemoryrepository.New()
+
+	type want struct {
+		code        int
+		contentType string
+	}
+
+	testValue := float64(32.33)
+
+	tests := []struct {
+		name   string
+		method string
+		url    string
+		metric metrics.Metrics
+		want   want
+	}{
+		{
+			name:   "positive test #1 add new metric",
+			method: http.MethodPost,
+			url:    "/update",
+			metric: metrics.Metrics{
+				ID:    "Alloc",
+				MType: "gauge",
+				Value: &testValue,
+			},
+			want: want{
+				code:        http.StatusOK,
+				contentType: "application/json; charset=UTF-8",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, errJSON := json.Marshal(tt.metric)
+			assert.NoError(t, errJSON)
+
+			bodyBuff := bytes.NewBuffer(body)
+			request := httptest.NewRequest(tt.method, tt.url, bodyBuff)
+			writer := httptest.NewRecorder()
+
+			routes := server.GetRoutes(metricRepository)
+			routes.ServeHTTP(writer, request)
+
+			result := writer.Result()
+			defer result.Body.Close()
+
+			expectedValue, errGetValue := metricRepository.GetValue(tt.metric.ID)
+			assert.NoError(t, errGetValue)
+
+			assert.Equal(t, tt.want.code, result.StatusCode)
+			assert.Equal(t, tt.want.contentType, result.Header.Get("content-type"))
+			assert.Equal(t, metrics.Gauge(testValue), expectedValue)
+		})
+	}
+}
+
+func TestGetValueJSON(t *testing.T) {
+	metricRepository := metricmemoryrepository.New()
+
+	type want struct {
+		code        int
+		contentType string
+		resultValue interface{}
+	}
+
+	tests := []struct {
+		name   string
+		method string
+		url    string
+		value  interface{}
+		metric metrics.Metrics
+		want   want
+	}{
+		{
+			name:   "positive test #1 get metric with type gauge",
+			method: http.MethodPost,
+			url:    "/value",
+			value:  metrics.Gauge(32.33),
+			metric: metrics.Metrics{
+				ID:    "Alloc",
+				MType: "gauge",
+			},
+			want: want{
+				code:        http.StatusOK,
+				contentType: "application/json; charset=UTF-8",
+				resultValue: float64(32.33),
+			},
+		},
+		{
+			name:   "positive test #2 get metric with type counter",
+			method: http.MethodPost,
+			url:    "/value",
+			value:  metrics.Counter(32),
+			metric: metrics.Metrics{
+				ID:    "PollCount",
+				MType: "counter",
+			},
+			want: want{
+				code:        http.StatusOK,
+				contentType: "application/json; charset=UTF-8",
+				resultValue: int64(32),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			metricRepository.InsertValue(tt.metric.ID, tt.value)
+
+			requestBody, errJSON := json.Marshal(tt.metric)
+			assert.NoError(t, errJSON)
+
+			bodyBuff := bytes.NewBuffer(requestBody)
+			request := httptest.NewRequest(tt.method, tt.url, bodyBuff)
+			writer := httptest.NewRecorder()
+
+			routes := server.GetRoutes(metricRepository)
+			routes.ServeHTTP(writer, request)
+
+			result := writer.Result()
+			defer result.Body.Close()
+
+			assert.Equal(t, tt.want.code, result.StatusCode)
+			assert.Equal(t, tt.want.contentType, result.Header.Get("content-type"))
+
+			resultBody, errReadALl := io.ReadAll(result.Body)
+			assert.NoError(t, errReadALl)
+
+			var resultMetric metrics.Metrics
+			errDecode := json.Unmarshal(resultBody, &resultMetric)
+			assert.NoError(t, errDecode)
+
+			fmt.Printf("== resultMetric: %v\n", resultMetric)
+
+			if tt.metric.MType == "counter" {
+				assert.Equal(t, tt.want.resultValue, *resultMetric.Delta)
+				return
+			}
+
+			assert.Equal(t, tt.want.resultValue, *resultMetric.Value)
 		})
 	}
 }

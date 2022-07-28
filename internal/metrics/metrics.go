@@ -12,11 +12,15 @@ type (
 )
 
 type Metrics struct {
+	ID      string   `json:"id"`              // имя метрики
+	MType   string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta   *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value   *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 	counter Counter
 	mutex   *sync.RWMutex
 }
 
-type Type map[string]interface{}
+type Collection map[string]interface{}
 
 func New() *Metrics {
 	var m sync.RWMutex
@@ -27,8 +31,8 @@ func New() *Metrics {
 	return &met
 }
 
-func (met *Metrics) GetListAvailable() Type {
-	return Type{
+func (met *Metrics) GetListAvailable() Collection {
+	return Collection{
 		"Alloc":         nil,
 		"BuckHashSys":   nil,
 		"Frees":         nil,
@@ -61,14 +65,14 @@ func (met *Metrics) GetListAvailable() Type {
 	}
 }
 
-func (met *Metrics) CollectData() Type {
+func (met *Metrics) CollectData() Collection {
 	var memoryStat runtime.MemStats
 	met.setCounter()
 
 	runtime.ReadMemStats(&memoryStat)
 
 	met.mutex.Lock()
-	data := Type{
+	data := Collection{
 		"Alloc":         Gauge(memoryStat.Alloc),
 		"BuckHashSys":   Gauge(memoryStat.BuckHashSys),
 		"Frees":         Gauge(memoryStat.Frees),

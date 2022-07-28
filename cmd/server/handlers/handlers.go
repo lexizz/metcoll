@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -102,6 +104,84 @@ func ShowValueMetric(metricRepository metricrepository.Interface) http.HandlerFu
 	}
 }
 
+func ShowValueMetricJSON(metricRepository metricrepository.Interface) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		log.Println(request.Method, request.Host, request.URL.Path)
+		log.Println("=== Work handler - ShowValueMetricJSON ===")
+
+		if request.Method != http.MethodPost {
+			http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
+		writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := io.ReadAll(request.Body)
+		if err != nil {
+			http.Error(writer, err.Error(), 500)
+			return
+		}
+
+		log.Println("=== Body ===", string(body))
+
+		var met metrics.Metrics
+		errDecode := json.Unmarshal(body, &met)
+		if errDecode != nil {
+			log.Printf("--- ERROR DECODE: %v", errDecode)
+			http.Error(writer, errDecode.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		metricName := met.ID
+		metricType := met.MType
+
+		log.Println("---metricType:", metricName)
+		log.Println("---metricType:", metricType)
+
+		resVal, err := metricRepository.GetValue(metricName)
+		if err != nil {
+			log.Println("---ERR GetValue:", err)
+			http.Error(writer, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		valueMetricType, errGetType := helper.GetType(resVal)
+		if errGetType != nil {
+			log.Println("---ERR GetType:", errGetType)
+			http.Error(writer, errGetType.Error(), http.StatusNotFound)
+			return
+		}
+
+		if valueMetricType != metricType {
+			log.Printf("---ERR Wrong metric type [expectedMetricType: %v; actual: %v]", valueMetricType, metricType)
+			http.Error(writer, "Wrong metric type []", http.StatusMethodNotAllowed)
+			return
+		}
+
+		switch val := resVal.(type) {
+		case metrics.Gauge:
+			preparedValueGauge := float64(val)
+			met.Value = &preparedValueGauge
+		case metrics.Counter:
+			preparedValueCounter := int64(val)
+			met.Delta = &preparedValueCounter
+		}
+
+		result, errMarshal := json.Marshal(met)
+		if errMarshal != nil {
+			log.Printf("--- Error json.Marshal: %v", errMarshal)
+		}
+
+		writer.WriteHeader(http.StatusOK)
+
+		_, writeError := writer.Write(result)
+		if writeError != nil {
+			log.Println(writeError)
+		}
+	}
+}
+
 func UpdateMetric(metricRepository metricrepository.Interface) http.HandlerFunc {
 	return func(write http.ResponseWriter, request *http.Request) {
 		log.Println(request.Method, request.Host, request.URL.Path)
@@ -196,6 +276,69 @@ func UpdateMetric(metricRepository metricrepository.Interface) http.HandlerFunc 
 		_, writeError := write.Write([]byte(resStr))
 		if writeError != nil {
 			log.Println(writeError)
+		}
+	}
+}
+
+func UpdateMetricJSON(metricRepository metricrepository.Interface) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		log.Println(request.Method, request.Host, request.URL.Path)
+		log.Println("=== Part url was detected `/update` === ")
+
+		writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
+		body, err := io.ReadAll(request.Body)
+		if err != nil {
+			http.Error(writer, err.Error(), 500)
+			return
+		}
+
+		log.Println("=== Body ===", string(body))
+
+		var met metrics.Metrics
+
+		errDecode := json.Unmarshal(body, &met)
+		if errDecode != nil {
+			log.Printf("--- ERROR DECODE: %v", errDecode)
+			http.Error(writer, errDecode.Error(), http.StatusNotFound)
+
+			return
+		}
+
+		switch {
+		case met.MType != metricTypeCounterConst && met.Value != nil:
+			metricRepository.InsertValue(met.ID, metrics.Gauge(*met.Value))
+		case met.MType == metricTypeCounterConst && met.Delta != nil:
+			_, errIncrease := metricRepository.IncreaseValue(met.ID, metrics.Counter(*met.Delta))
+			if errIncrease != nil {
+				log.Printf("--- ERROR INCREASEVALUE: %v\n", errIncrease)
+				http.Error(writer, errIncrease.Error(), http.StatusBadRequest)
+			}
+		default:
+			http.Error(writer, "Wrong field value name", http.StatusBadRequest)
+			return
+		}
+
+		recorderValue, errRecorded := metricRepository.GetValue(met.ID)
+		if errRecorded != nil {
+			log.Println("---RECORDER-Error:", errRecorded)
+		} else {
+			log.Println("---RECORDER:", recorderValue)
+		}
+
+		resp, err := json.Marshal(met)
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		writer.WriteHeader(http.StatusOK)
+		_, writeError := writer.Write(resp)
+		if writeError != nil {
+			log.Printf("--- ERROR Write: %v", writeError)
+			http.Error(writer, writeError.Error(), http.StatusInternalServerError)
+
+			return
 		}
 	}
 }
